@@ -1,187 +1,176 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import ReadingListItem from "@/components/dashboard/ReadingListItem";
 import DraftPost from "@/components/dashboard/DraftPost";
-import { CalendarDays, BookOpen, FileEdit, CheckCircle2, Clock, Send } from "lucide-react";
+import { CalendarDays, BookOpen, FileEdit, CheckCircle2, Clock, Send, RefreshCw, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
-// Mock data for demonstration
-const mockReadingList = [
-  {
-    id: "1",
-    title: "GPT-5 Shows Promise in Diagnostic Radiology: A Multi-Center Study",
-    source: "Nature Medicine",
-    summary: "A comprehensive study across 15 hospitals demonstrates GPT-5's ability to match radiologist performance in chest X-ray interpretation with 94% accuracy.",
-    relevanceScore: 95,
-    isRead: false,
-    url: "#",
-  },
-  {
-    id: "2",
-    title: "FDA Clears AI-Powered ECG Analysis Tool for Atrial Fibrillation Detection",
-    source: "STAT News",
-    summary: "The agency approved a new AI algorithm capable of detecting irregular heart rhythms from standard 12-lead ECGs with unprecedented sensitivity.",
-    relevanceScore: 88,
-    isRead: false,
-    url: "#",
-  },
-  {
-    id: "3",
-    title: "Large Language Models Transform Clinical Trial Matching",
-    source: "JAMA Network",
-    summary: "New research shows LLMs can reduce clinical trial matching time by 85% while improving patient-trial compatibility scores.",
-    relevanceScore: 82,
-    isRead: true,
-    url: "#",
-  },
-  {
-    id: "4",
-    title: "AI-Driven Drug Discovery: Insilico Medicine's Latest Breakthrough",
-    source: "BioPharma Dive",
-    summary: "Insilico's generative AI platform identifies novel target for pulmonary fibrosis, entering Phase 2 trials in record time.",
-    relevanceScore: 76,
-    isRead: false,
-    url: "#",
-  },
-  {
-    id: "5",
-    title: "Ambient AI Scribes Reduce Physician Documentation Time by 50%",
-    source: "Healthcare IT News",
-    summary: "Multi-site implementation study shows significant time savings and improved physician satisfaction with AI documentation assistants.",
-    relevanceScore: 71,
-    isRead: false,
-    url: "#",
-  },
-  {
-    id: "6",
-    title: "Microsoft and Epic Partnership Expands AI Integration in EHRs",
-    source: "Modern Healthcare",
-    summary: "The collaboration brings Azure AI capabilities directly into Epic workflows, enabling smarter clinical decision support.",
-    relevanceScore: 68,
-    isRead: false,
-    url: "#",
-  },
-  {
-    id: "7",
-    title: "DeepMind's AlphaFold Database Expands to Include Protein Interactions",
-    source: "Science Daily",
-    summary: "The expanded database now includes predictions for protein-protein interactions, opening new avenues for drug development.",
-    relevanceScore: 65,
-    isRead: false,
-    url: "#",
-  },
-  {
-    id: "8",
-    title: "AI-Powered Pathology Gains Traction in Cancer Diagnosis",
-    source: "The Lancet Digital Health",
-    summary: "Studies confirm AI assistance improves pathologist accuracy in identifying subtle cancer markers across multiple tumor types.",
-    relevanceScore: 62,
-    isRead: false,
-    url: "#",
-  },
-  {
-    id: "9",
-    title: "Regulatory Framework for AI in Healthcare: EU Leads the Way",
-    source: "Reuters Health",
-    summary: "European Union finalizes comprehensive guidelines for AI medical device certification, setting global precedent.",
-    relevanceScore: 55,
-    isRead: false,
-    url: "#",
-  },
-  {
-    id: "10",
-    title: "Telehealth AI Triage Systems Improve ER Wait Times",
-    source: "Health Affairs",
-    summary: "Pilot programs demonstrate AI-powered triage can reduce emergency department congestion by 30% without compromising care quality.",
-    relevanceScore: 52,
-    isRead: false,
-    url: "#",
-  },
-];
+type DraftPostStatus = "draft" | "approved" | "archived";
 
-type DraftPostStatus = "draft" | "approved" | "posted";
+interface ContentItem {
+  id: string;
+  title: string;
+  url: string;
+  summary: string | null;
+  relevance_score: number;
+  is_read: boolean;
+  source_id: string | null;
+  sources?: { name: string } | null;
+}
 
 interface DraftPostData {
   id: string;
   content: string;
   postType: string;
   status: DraftPostStatus;
+  content_item_id: string | null;
 }
 
-const mockDraftPosts: DraftPostData[] = [
-  {
-    id: "1",
-    content: `🔬 Breaking: GPT-5 matches radiologist performance in chest X-ray interpretation!
-
-A new multi-center study across 15 hospitals shows 94% accuracy in diagnostic radiology. This isn't about replacing physicians—it's about augmenting our capabilities.
-
-Key takeaways:
-• Faster turnaround times
-• Consistent 24/7 coverage
-• Second-opinion validation
-
-The future of radiology is collaborative AI. What are your thoughts on AI-assisted diagnostics?
-
-#HealthcareAI #Radiology #MedicalImaging #AIinMedicine`,
-    postType: "insight",
-    status: "draft",
-  },
-  {
-    id: "2",
-    content: `📊 AI is revolutionizing clinical trial matching.
-
-New JAMA research shows LLMs can reduce trial matching time by 85%! For patients waiting for breakthrough treatments, this efficiency gain is life-changing.
-
-The bottleneck in clinical research has always been patient recruitment. AI is solving this at scale.
-
-Who else is excited about faster paths to new treatments?
-
-#ClinicalTrials #HealthTech #PatientCare #Innovation`,
-    postType: "commentary",
-    status: "draft",
-  },
-  {
-    id: "3",
-    content: `💡 50% less time on documentation = more time with patients.
-
-That's what ambient AI scribes are delivering for physicians. As someone who's spent countless hours on EHR documentation, this resonates deeply.
-
-The best technology is invisible—it works in the background while we focus on what matters: patient care.
-
-What documentation challenges do you face in your practice?
-
-#PhysicianBurnout #HealthcareAI #EHR #PatientCare`,
-    postType: "personal",
-    status: "draft",
-  },
-];
-
 const Index = () => {
-  const [readingList, setReadingList] = useState(mockReadingList);
-  const [draftPosts, setDraftPosts] = useState(mockDraftPosts);
+  const [readingList, setReadingList] = useState<ContentItem[]>([]);
+  const [draftPosts, setDraftPosts] = useState<DraftPostData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const handleToggleRead = (id: string) => {
+  const fetchData = async () => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Fetch today's reading list
+      const { data: readingListData } = await supabase
+        .from('reading_lists')
+        .select(`
+          id,
+          reading_list_items (
+            rank,
+            content_items (
+              id,
+              title,
+              url,
+              summary,
+              relevance_score,
+              is_read,
+              source_id,
+              sources (name)
+            )
+          )
+        `)
+        .eq('list_date', today)
+        .maybeSingle();
+
+      if (readingListData?.reading_list_items) {
+        const items = readingListData.reading_list_items
+          .sort((a: any, b: any) => a.rank - b.rank)
+          .map((item: any) => ({
+            ...item.content_items,
+            sources: item.content_items?.sources
+          }))
+          .filter((item: any) => item?.id);
+        setReadingList(items);
+      }
+
+      // Fetch today's draft posts
+      const { data: draftsData } = await supabase
+        .from('draft_posts')
+        .select('*')
+        .gte('created_at', today)
+        .order('created_at', { ascending: false });
+
+      if (draftsData) {
+        setDraftPosts(draftsData.map(d => ({
+          id: d.id,
+          content: d.edited_text || d.draft_text,
+          postType: d.post_type || 'insight',
+          status: d.status as DraftPostStatus,
+          content_item_id: d.content_item_id
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleToggleRead = async (id: string) => {
+    const item = readingList.find(i => i.id === id);
+    if (!item) return;
+
+    const newIsRead = !item.is_read;
+    
     setReadingList(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, isRead: !item.isRead } : item
-      )
+      prev.map(i => i.id === id ? { ...i, is_read: newIsRead } : i)
     );
+
+    const { error } = await supabase
+      .from('content_items')
+      .update({ is_read: newIsRead })
+      .eq('id', id);
+
+    if (error) {
+      setReadingList(prev =>
+        prev.map(i => i.id === id ? { ...i, is_read: !newIsRead } : i)
+      );
+      toast({ title: "Error", description: "Failed to update read status", variant: "destructive" });
+    }
   };
 
-  const handleUpdatePost = (id: string, content: string) => {
+  const handleUpdatePost = async (id: string, content: string) => {
     setDraftPosts(prev =>
-      prev.map(post =>
-        post.id === id ? { ...post, content } : post
-      )
+      prev.map(post => post.id === id ? { ...post, content } : post)
     );
+
+    const { error } = await supabase
+      .from('draft_posts')
+      .update({ edited_text: content })
+      .eq('id', id);
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to save draft", variant: "destructive" });
+    }
   };
 
-  const handleApprovePost = (id: string) => {
+  const handleApprovePost = async (id: string) => {
     setDraftPosts(prev =>
-      prev.map(post =>
-        post.id === id ? { ...post, status: "approved" as DraftPostStatus } : post
-      )
+      prev.map(post => post.id === id ? { ...post, status: "approved" as DraftPostStatus } : post)
     );
+
+    const { error } = await supabase
+      .from('draft_posts')
+      .update({ status: 'approved' })
+      .eq('id', id);
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to approve post", variant: "destructive" });
+    } else {
+      toast({ title: "Post approved", description: "Ready to share on LinkedIn!" });
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    toast({ title: "Running pipeline", description: "This may take a few minutes..." });
+    
+    try {
+      const { error } = await supabase.functions.invoke('daily-pipeline');
+      
+      if (error) throw error;
+      
+      await fetchData();
+      toast({ title: "Success", description: "Content refreshed!" });
+    } catch (error) {
+      console.error('Pipeline error:', error);
+      toast({ title: "Error", description: "Failed to run pipeline", variant: "destructive" });
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const today = new Date().toLocaleDateString("en-US", {
@@ -191,19 +180,44 @@ const Index = () => {
     day: "numeric",
   });
 
-  const unreadCount = readingList.filter(item => !item.isRead).length;
-  const readCount = readingList.filter(item => item.isRead).length;
+  const unreadCount = readingList.filter(item => !item.is_read).length;
+  const readCount = readingList.filter(item => item.is_read).length;
   const draftsCount = draftPosts.filter(p => p.status === "draft").length;
   const approvedCount = draftPosts.filter(p => p.status === "approved").length;
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-6 py-8 flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8 animate-fade-in">
-          <div className="flex items-center gap-2 text-muted-foreground mb-2">
-            <CalendarDays className="h-4 w-4" />
-            <span className="text-sm">{today}</span>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <CalendarDays className="h-4 w-4" />
+              <span className="text-sm">{today}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
+              {refreshing ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              Refresh Content
+            </Button>
           </div>
           <h1 className="text-3xl font-bold mb-4">
             Good morning, <span className="gradient-text">Doctor</span>
@@ -276,14 +290,21 @@ const Index = () => {
             <div className="mb-4">
               <h2 className="text-xl font-semibold mb-1">Today's Curated Articles</h2>
               <p className="text-sm text-muted-foreground">
-                Stay informed with the latest healthcare AI developments. Mark articles as read to track your progress.
+                {readingList.length > 0 
+                  ? `${readingList.length} articles curated for you. Mark as read to track progress.`
+                  : 'No articles yet. Click "Refresh Content" to fetch today\'s content.'}
               </p>
             </div>
             <div className="grid gap-3">
               {readingList.map((item, index) => (
                 <ReadingListItem
                   key={item.id}
-                  {...item}
+                  title={item.title}
+                  source={item.sources?.name || 'Unknown Source'}
+                  summary={item.summary || 'No summary available'}
+                  relevanceScore={item.relevance_score}
+                  isRead={item.is_read}
+                  url={item.url}
                   onToggleRead={() => handleToggleRead(item.id)}
                   index={index}
                 />
@@ -296,7 +317,9 @@ const Index = () => {
             <div className="mb-4">
               <h2 className="text-xl font-semibold mb-1">LinkedIn Draft Posts</h2>
               <p className="text-sm text-muted-foreground">
-                AI-generated posts based on today's top articles. Edit, refine, and approve before sharing.
+                {draftPosts.length > 0
+                  ? 'AI-generated posts based on today\'s top articles. Edit, refine, and approve.'
+                  : 'No drafts yet. Run the pipeline to generate posts.'}
               </p>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

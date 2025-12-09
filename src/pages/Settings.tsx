@@ -6,27 +6,27 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Settings as SettingsIcon, 
-  Key, 
   Bell, 
   Clock, 
   Linkedin,
   Save,
-  Eye,
-  EyeOff
+  Play,
+  Loader2,
+  CheckCircle
 } from "lucide-react";
 
 const Settings = () => {
-  const [showApiKey, setShowApiKey] = useState(false);
   const [settings, setSettings] = useState({
-    openaiKey: "sk-••••••••••••••••••••••••••••••••",
-    linkedinConnected: false,
     dailyDigest: true,
     digestTime: "07:00",
     autoApprove: false,
-    articlesPerDay: "10",
+    articlesPerDay: "15",
   });
+  const [runningPipeline, setRunningPipeline] = useState(false);
+  const [pipelineStatus, setPipelineStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const handleSave = () => {
     toast({
@@ -35,47 +35,92 @@ const Settings = () => {
     });
   };
 
+  const handleRunPipeline = async () => {
+    setRunningPipeline(true);
+    setPipelineStatus('idle');
+    
+    toast({
+      title: "Pipeline started",
+      description: "Fetching content from sources... This may take a few minutes.",
+    });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('daily-pipeline');
+      
+      if (error) throw error;
+      
+      setPipelineStatus('success');
+      toast({
+        title: "Pipeline completed",
+        description: "Content has been refreshed successfully!",
+      });
+    } catch (error) {
+      console.error('Pipeline error:', error);
+      setPipelineStatus('error');
+      toast({
+        title: "Pipeline failed",
+        description: "There was an error running the pipeline. Check the logs.",
+        variant: "destructive",
+      });
+    } finally {
+      setRunningPipeline(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-6 py-8 max-w-2xl">
         <div className="mb-8 animate-fade-in">
           <h1 className="text-3xl font-bold mb-2">Settings</h1>
           <p className="text-muted-foreground">
-            Configure your API keys and preferences
+            Configure your content pipeline and preferences
           </p>
         </div>
 
         <div className="space-y-8">
-          {/* API Configuration */}
+          {/* Pipeline Control */}
           <section className="glass-card p-6 animate-slide-up">
             <div className="flex items-center gap-2 mb-4">
-              <Key className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">API Configuration</h2>
+              <Play className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Content Pipeline</h2>
             </div>
             
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="openai">OpenAI API Key</Label>
-                <div className="relative">
-                  <Input
-                    id="openai"
-                    type={showApiKey ? "text" : "password"}
-                    value={settings.openaiKey}
-                    onChange={(e) => setSettings({ ...settings, openaiKey: e.target.value })}
-                    className="bg-secondary border-border pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Used for content analysis and post generation
-                </p>
+              <p className="text-sm text-muted-foreground">
+                The pipeline fetches content from your configured sources, scores relevance, 
+                generates your reading list, and drafts LinkedIn posts.
+              </p>
+              
+              <div className="flex items-center gap-4">
+                <Button 
+                  onClick={handleRunPipeline}
+                  disabled={runningPipeline}
+                  variant="glow"
+                >
+                  {runningPipeline ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Running Pipeline...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4 mr-2" />
+                      Run Pipeline Now
+                    </>
+                  )}
+                </Button>
+                
+                {pipelineStatus === 'success' && (
+                  <div className="flex items-center gap-2 text-success">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="text-sm">Completed successfully</span>
+                  </div>
+                )}
               </div>
+              
+              <p className="text-xs text-muted-foreground">
+                Pipeline runs automatically daily at your configured time. You can also trigger it manually.
+              </p>
             </div>
           </section>
 
@@ -88,14 +133,12 @@ const Settings = () => {
             
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Connect LinkedIn Account</p>
+                <p className="font-medium">Manual Posting Only</p>
                 <p className="text-sm text-muted-foreground">
-                  Enable direct posting to your LinkedIn profile
+                  Copy approved drafts to clipboard and paste into LinkedIn. 
+                  Direct API posting is not available.
                 </p>
               </div>
-              <Button variant={settings.linkedinConnected ? "outline" : "glow"}>
-                {settings.linkedinConnected ? "Disconnect" : "Connect"}
-              </Button>
             </div>
           </section>
 
@@ -125,7 +168,7 @@ const Settings = () => {
               <div className="space-y-2">
                 <Label htmlFor="time" className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  Digest Time
+                  Pipeline Run Time (UTC)
                 </Label>
                 <Input
                   id="time"
@@ -135,6 +178,9 @@ const Settings = () => {
                   className="bg-secondary border-border w-32"
                   disabled={!settings.dailyDigest}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Time when the daily pipeline runs automatically
+                </p>
               </div>
             </div>
           </section>
@@ -148,7 +194,7 @@ const Settings = () => {
             
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="articles">Articles per Day</Label>
+                <Label htmlFor="articles">Target Articles per Day</Label>
                 <Input
                   id="articles"
                   type="number"
@@ -159,7 +205,7 @@ const Settings = () => {
                   className="bg-secondary border-border w-24"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Number of articles to include in daily reading list (5-25)
+                  Number of articles to include in daily reading list (10-20 recommended)
                 </p>
               </div>
 
