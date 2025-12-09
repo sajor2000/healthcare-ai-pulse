@@ -291,10 +291,25 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_today_pipeline_status: {
+        Row: {
+          completed_at: string | null
+          duration_seconds: number | null
+          error_message: string | null
+          id: string | null
+          items_scraped: number | null
+          posts_generated: number | null
+          started_at: string | null
+          status: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      log_cron_execution: {
+        Args: { details?: string; job_name: string; status: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

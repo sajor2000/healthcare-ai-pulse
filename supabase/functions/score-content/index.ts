@@ -5,61 +5,53 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Keywords for relevance scoring
-const HIGH_RELEVANCE_KEYWORDS = [
-  'fda', 'approval', 'clinical trial', 'diagnosis', 'treatment',
-  'patient care', 'healthcare ai', 'medical imaging', 'radiology',
-  'pathology', 'ehr', 'electronic health', 'clinical decision',
-  'physician', 'hospital', 'health system', 'deep learning',
-  'machine learning', 'large language model', 'llm', 'gpt',
-  'diagnostic', 'therapeutic', 'regulatory', 'hipaa', 'phi'
-]
+interface ContentItem {
+  id: string
+  title: string
+  summary: string | null
+  full_text: string | null
+}
 
-const MEDIUM_RELEVANCE_KEYWORDS = [
-  'artificial intelligence', 'ai', 'digital health', 'telehealth',
-  'healthcare', 'medical', 'health tech', 'startup', 'funding',
-  'research', 'study', 'algorithm', 'data', 'innovation'
-]
+interface ScoringRule {
+  keywords: string[]
+  points: number
+}
 
-function calculateRelevanceScore(title: string, summary: string | null): number {
-  const text = `${title} ${summary || ''}`.toLowerCase()
-  
-  let score = 30 // Base score
-  
-  // High relevance keywords (+10 each, max +40)
-  let highKeywordMatches = 0
-  for (const keyword of HIGH_RELEVANCE_KEYWORDS) {
-    if (text.includes(keyword)) {
-      highKeywordMatches++
-      if (highKeywordMatches <= 4) {
-        score += 10
+const SCORING_RULES: Record<string, ScoringRule> = {
+  high_value: {
+    keywords: ['FDA approval', 'clinical trial', 'peer-reviewed', 'hospital deployment',
+               'health equity', 'patient outcomes', 'regulatory', 'HIPAA'],
+    points: 20
+  },
+  medium_value: {
+    keywords: ['AI', 'machine learning', 'deep learning', 'LLM', 'GPT', 'clinical decision',
+               'diagnostic', 'EHR', 'EMR', 'telehealth', 'remote monitoring'],
+    points: 10
+  },
+  low_value: {
+    keywords: ['healthcare', 'health', 'medical', 'patient', 'physician', 'hospital',
+               'startup', 'funding', 'research'],
+    points: 5
+  },
+  penalties: {
+    keywords: ['sponsored', 'advertisement', 'press release', 'opinion'],
+    points: -10
+  }
+}
+
+function calculateRelevanceScore(title: string, summary: string, fullText: string): number {
+  const content = `${title} ${summary} ${fullText}`.toLowerCase()
+  let score = 50  // Base score
+
+  for (const [_, rule] of Object.entries(SCORING_RULES)) {
+    for (const keyword of rule.keywords) {
+      if (content.includes(keyword.toLowerCase())) {
+        score += rule.points
       }
     }
   }
-  
-  // Medium relevance keywords (+5 each, max +20)
-  let mediumKeywordMatches = 0
-  for (const keyword of MEDIUM_RELEVANCE_KEYWORDS) {
-    if (text.includes(keyword)) {
-      mediumKeywordMatches++
-      if (mediumKeywordMatches <= 4) {
-        score += 5
-      }
-    }
-  }
-  
-  // Boost for specific terms
-  if (text.includes('breakthrough') || text.includes('first') || text.includes('new')) {
-    score += 5
-  }
-  
-  // Penalize low-quality indicators
-  if (text.includes('sponsored') || text.includes('advertisement')) {
-    score -= 20
-  }
-  
-  // Cap at 100
-  return Math.min(100, Math.max(0, score))
+
+  return Math.max(0, Math.min(100, score))
 }
 
 Deno.serve(async (req) => {
@@ -67,49 +59,66 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  )
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')
+  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+  if (!supabaseUrl || !supabaseKey) {
+    return new Response(
+      JSON.stringify({ error: 'Missing Supabase credentials' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    )
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  })
 
   try {
-    // Get unscored content items (score = 0)
-    const { data: items, error: fetchError } = await supabase
+    console.log('Starting content scoring...')
+    
+    const { data: items, error } = await supabase
       .from('content_items')
-      .select('*')
+      .select('id, title, summary, full_text')
       .eq('relevance_score', 0)
+      .gte('scraped_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
       .limit(100)
 
-    if (fetchError) {
-      throw fetchError
-    }
-
-    console.log(`Scoring ${items?.length || 0} content items`)
+    if (error) throw error
 
     let scored = 0
-    for (const item of items || []) {
-      const score = calculateRelevanceScore(item.title, item.summary)
-      
+
+    for (const item of (items as ContentItem[]) || []) {
+      const score = calculateRelevanceScore(
+        item.title || '',
+        item.summary || '',
+        item.full_text || ''
+      )
+
       const { error: updateError } = await supabase
         .from('content_items')
         .update({ relevance_score: score })
         .eq('id', item.id)
-      
-      if (!updateError) {
-        scored++
-        console.log(`Scored "${item.title.substring(0, 50)}..." = ${score}`)
-      }
+
+      if (!updateError) scored++
     }
 
-    console.log(`Scored ${scored} items`)
+    console.log(`Content scoring completed: ${scored} items scored`)
 
     return new Response(
-      JSON.stringify({ success: true, items_scored: scored }),
+      JSON.stringify({
+        success: true,
+        items_scored: scored,
+        total_found: items?.length || 0
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
-    console.error('Score content error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      function: 'score-content',
+      error: errorMessage
+    }))
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }

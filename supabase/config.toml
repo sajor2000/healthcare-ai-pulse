@@ -17,3 +17,9 @@ verify_jwt = false
 
 [functions.draft-posts]
 verify_jwt = false
+
+[functions.fetch-pubmed]
+verify_jwt = false
+
+[functions.fetch-arxiv]
+verify_jwt = false
