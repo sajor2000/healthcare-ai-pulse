@@ -22,6 +22,7 @@ export type Database = {
           id: string
           is_read: boolean | null
           is_saved: boolean | null
+          key_points: string[] | null
           pub_date: string | null
           relevance_score: number | null
           scraped_at: string | null
@@ -38,6 +39,7 @@ export type Database = {
           id?: string
           is_read?: boolean | null
           is_saved?: boolean | null
+          key_points?: string[] | null
           pub_date?: string | null
           relevance_score?: number | null
           scraped_at?: string | null
@@ -54,6 +56,7 @@ export type Database = {
           id?: string
           is_read?: boolean | null
           is_saved?: boolean | null
+          key_points?: string[] | null
           pub_date?: string | null
           relevance_score?: number | null
           scraped_at?: string | null
