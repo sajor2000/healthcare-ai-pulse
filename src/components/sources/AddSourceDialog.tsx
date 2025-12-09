@@ -28,14 +28,14 @@ const AddSourceDialog = ({ onAdd }: AddSourceDialogProps) => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
-  const [sourceType, setSourceType] = useState("website");
+  const [sourceType, setSourceType] = useState("news");
 
   const handleSubmit = () => {
     if (name && url) {
       onAdd({ name, url, sourceType });
       setName("");
       setUrl("");
-      setSourceType("website");
+      setSourceType("news");
       setOpen(false);
     }
   };
@@ -83,9 +83,10 @@ const AddSourceDialog = ({ onAdd }: AddSourceDialogProps) => {
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="website">Website</SelectItem>
-                <SelectItem value="rss">RSS Feed</SelectItem>
-                <SelectItem value="api">API</SelectItem>
+                <SelectItem value="news">News</SelectItem>
+                <SelectItem value="blog">Blog</SelectItem>
+                <SelectItem value="journal">Journal</SelectItem>
+                <SelectItem value="policy">Policy</SelectItem>
               </SelectContent>
             </Select>
           </div>

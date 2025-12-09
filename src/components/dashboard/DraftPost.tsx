@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-type DraftPostStatus = "draft" | "approved" | "posted";
+type DraftPostStatus = "draft" | "approved" | "archived";
 
 interface DraftPostProps {
   id: string;
@@ -58,8 +58,8 @@ const DraftPost = ({
     switch (status) {
       case "approved":
         return <span className="text-xs font-medium text-success bg-success/20 px-2 py-0.5 rounded">Approved</span>;
-      case "posted":
-        return <span className="text-xs font-medium text-primary bg-primary/20 px-2 py-0.5 rounded">Posted</span>;
+      case "archived":
+        return <span className="text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">Archived</span>;
       default:
         return <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded">Draft</span>;
     }

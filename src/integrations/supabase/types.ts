@@ -17,6 +17,7 @@ export type Database = {
       content_items: {
         Row: {
           authors: string | null
+          created_at: string | null
           full_text: string | null
           id: string
           is_read: boolean | null
@@ -27,10 +28,12 @@ export type Database = {
           source_id: string | null
           summary: string | null
           title: string
+          updated_at: string | null
           url: string
         }
         Insert: {
           authors?: string | null
+          created_at?: string | null
           full_text?: string | null
           id?: string
           is_read?: boolean | null
@@ -41,10 +44,12 @@ export type Database = {
           source_id?: string | null
           summary?: string | null
           title: string
+          updated_at?: string | null
           url: string
         }
         Update: {
           authors?: string | null
+          created_at?: string | null
           full_text?: string | null
           id?: string
           is_read?: boolean | null
@@ -55,6 +60,7 @@ export type Database = {
           source_id?: string | null
           summary?: string | null
           title?: string
+          updated_at?: string | null
           url?: string
         }
         Relationships: [
@@ -74,9 +80,10 @@ export type Database = {
           draft_text: string
           edited_text: string | null
           id: string
-          post_type: string | null
+          post_type: string
           reading_list_id: string | null
           status: string | null
+          updated_at: string | null
         }
         Insert: {
           content_item_id?: string | null
@@ -84,9 +91,10 @@ export type Database = {
           draft_text: string
           edited_text?: string | null
           id?: string
-          post_type?: string | null
+          post_type: string
           reading_list_id?: string | null
           status?: string | null
+          updated_at?: string | null
         }
         Update: {
           content_item_id?: string | null
@@ -94,9 +102,10 @@ export type Database = {
           draft_text?: string
           edited_text?: string | null
           id?: string
-          post_type?: string | null
+          post_type?: string
           reading_list_id?: string | null
           status?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -122,6 +131,7 @@ export type Database = {
           query: string
           response: Json | null
           searched_at: string | null
+          urls_discovered: number | null
         }
         Insert: {
           citations?: Json | null
@@ -129,6 +139,7 @@ export type Database = {
           query: string
           response?: Json | null
           searched_at?: string | null
+          urls_discovered?: number | null
         }
         Update: {
           citations?: Json | null
@@ -136,27 +147,67 @@ export type Database = {
           query?: string
           response?: Json | null
           searched_at?: string | null
+          urls_discovered?: number | null
+        }
+        Relationships: []
+      }
+      pipeline_runs: {
+        Row: {
+          completed_at: string | null
+          error_message: string | null
+          id: string
+          items_scraped: number | null
+          posts_generated: number | null
+          run_date: string
+          started_at: string | null
+          status: string | null
+          steps_completed: Json | null
+        }
+        Insert: {
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          items_scraped?: number | null
+          posts_generated?: number | null
+          run_date?: string
+          started_at?: string | null
+          status?: string | null
+          steps_completed?: Json | null
+        }
+        Update: {
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          items_scraped?: number | null
+          posts_generated?: number | null
+          run_date?: string
+          started_at?: string | null
+          status?: string | null
+          steps_completed?: Json | null
         }
         Relationships: []
       }
       reading_list_items: {
         Row: {
-          content_item_id: string | null
+          added_at: string | null
+          content_item_id: string
           id: string
-          rank: number | null
-          reading_list_id: string | null
+          rank: number
+          reading_list_id: string
         }
         Insert: {
-          content_item_id?: string | null
+          added_at?: string | null
+          content_item_id: string
           id?: string
-          rank?: number | null
-          reading_list_id?: string | null
+          rank: number
+          reading_list_id: string
         }
         Update: {
-          content_item_id?: string | null
+          added_at?: string | null
+          content_item_id?: string
           id?: string
-          rank?: number | null
-          reading_list_id?: string | null
+          rank?: number
+          reading_list_id?: string
         }
         Relationships: [
           {
@@ -179,46 +230,61 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          items_count: number | null
           list_date: string
+          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
+          items_count?: number | null
           list_date?: string
+          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
+          items_count?: number | null
           list_date?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
       sources: {
         Row: {
+          crawl_frequency: string | null
           created_at: string | null
           id: string
           is_active: boolean | null
           last_crawled_at: string | null
+          last_error: string | null
           name: string
-          source_type: string | null
+          source_type: string
+          updated_at: string | null
           url: string
         }
         Insert: {
+          crawl_frequency?: string | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
           last_crawled_at?: string | null
+          last_error?: string | null
           name: string
-          source_type?: string | null
+          source_type: string
+          updated_at?: string | null
           url: string
         }
         Update: {
+          crawl_frequency?: string | null
           created_at?: string | null
           id?: string
           is_active?: boolean | null
           last_crawled_at?: string | null
+          last_error?: string | null
           name?: string
-          source_type?: string | null
+          source_type?: string
+          updated_at?: string | null
           url?: string
         }
         Relationships: []

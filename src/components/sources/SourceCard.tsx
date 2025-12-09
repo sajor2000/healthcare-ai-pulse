@@ -1,4 +1,4 @@
-import { Trash2, ExternalLink, Globe, Rss, FileText } from "lucide-react";
+import { Trash2, ExternalLink, Newspaper, BookOpen, FileText, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
@@ -26,12 +26,16 @@ const SourceCard = ({
 }: SourceCardProps) => {
   const getTypeIcon = () => {
     switch (sourceType) {
-      case "rss":
-        return <Rss className="h-4 w-4" />;
-      case "api":
+      case "news":
+        return <Newspaper className="h-4 w-4" />;
+      case "blog":
+        return <BookOpen className="h-4 w-4" />;
+      case "journal":
         return <FileText className="h-4 w-4" />;
+      case "policy":
+        return <Building2 className="h-4 w-4" />;
       default:
-        return <Globe className="h-4 w-4" />;
+        return <Newspaper className="h-4 w-4" />;
     }
   };
 
