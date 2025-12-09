@@ -22,6 +22,7 @@ interface ContentItem {
   is_read: boolean;
   is_saved: boolean;
   source_id: string | null;
+  pub_date: string | null;
   sources?: { name: string; source_type: string } | null;
 }
 
@@ -62,6 +63,7 @@ const Index = () => {
               is_read,
               is_saved,
               source_id,
+              pub_date,
               sources (name, source_type)
             )
           )
@@ -383,13 +385,14 @@ const Index = () => {
                   key={item.id}
                   title={item.title}
                   source={item.sources?.name || 'Unknown Source'}
-                  sourceType={item.sources?.source_type || 'news'}
+                  sourceType={item.sources?.source_type || 'journal'}
                   summary={item.summary || 'No summary available'}
                   keyPoints={item.key_points || undefined}
                   relevanceScore={item.relevance_score}
                   isRead={item.is_read}
                   isSaved={item.is_saved}
                   url={item.url}
+                  pubDate={item.pub_date || undefined}
                   onToggleRead={() => handleToggleRead(item.id)}
                   onToggleSave={() => handleToggleSave(item.id)}
                   index={index}

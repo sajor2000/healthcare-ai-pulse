@@ -100,14 +100,14 @@ Deno.serve(async (req) => {
   try {
     console.log('Starting content summarization...')
 
-    // Get content items that need summarization (have text but no key_points)
+    // Get content items that need summarization (no key_points yet, have some text content)
     const { data: items, error: fetchError } = await supabase
       .from('content_items')
       .select('id, title, summary, full_text')
       .is('key_points', null)
-      .not('full_text', 'is', null)
+      .or('full_text.not.is.null,summary.not.is.null')
       .order('relevance_score', { ascending: false })
-      .limit(10)
+      .limit(15)
 
     if (fetchError) throw fetchError
 
