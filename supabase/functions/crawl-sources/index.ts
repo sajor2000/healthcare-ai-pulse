@@ -103,12 +103,34 @@ Deno.serve(async (req) => {
               if (articleData.success && articleData.data) {
                 const { markdown: articleMarkdown, metadata: articleMeta } = articleData.data
 
+                // Extract title from multiple sources - Firecrawl metadata, og:title, or URL
+                let articleTitle = articleMeta?.title || articleMeta?.ogTitle || ''
+                
+                // If no title from metadata, try to extract from markdown first line
+                if (!articleTitle && articleMarkdown) {
+                  const firstLine = articleMarkdown.split('\n').find((line: string) => line.trim().length > 0)
+                  if (firstLine && firstLine.startsWith('#')) {
+                    articleTitle = firstLine.replace(/^#+\s*/, '').trim()
+                  } else if (firstLine && firstLine.length < 200) {
+                    articleTitle = firstLine.trim()
+                  }
+                }
+
+                // Last resort: derive from URL
+                if (!articleTitle) {
+                  const urlParts = articleUrl.split('/')
+                  const lastPart = urlParts[urlParts.length - 1] || urlParts[urlParts.length - 2]
+                  articleTitle = lastPart.replace(/-/g, ' ').replace(/\.(html|htm|php)$/, '').substring(0, 100)
+                }
+
+                console.log(`Article title extracted: ${articleTitle}`)
+
                 // Insert/update content item
                 const { error: insertError } = await supabase.from('content_items').upsert({
                   source_id: source.id,
-                  title: articleMeta?.title || 'Untitled',
+                  title: articleTitle || 'Untitled',
                   url: articleUrl,
-                  summary: articleMeta?.description || articleMarkdown?.substring(0, 300),
+                  summary: articleMeta?.description || articleMeta?.ogDescription || articleMarkdown?.substring(0, 300),
                   full_text: articleMarkdown,
                   pub_date: articleMeta?.publishedTime?.split('T')[0] || new Date().toISOString().split('T')[0]
                 }, { onConflict: 'url' })
