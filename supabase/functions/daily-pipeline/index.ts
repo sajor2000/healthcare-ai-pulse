@@ -112,8 +112,24 @@ Deno.serve(async (req) => {
       console.error('arXiv fetch failed:', e)
     }
 
-    // Step 4: Crawl sources with Firecrawl
-    console.log('Step 4: Crawling sources...')
+    // Step 4: Fetch Exa AI research
+    console.log('Step 4: Fetching Exa AI research...')
+    try {
+      const exaResponse = await fetchWithTimeout(
+        `${supabaseUrl}/functions/v1/fetch-exa`,
+        { method: 'POST', headers },
+        REQUEST_TIMEOUT
+      )
+      const exaResult = await exaResponse.json()
+      console.log('Exa result:', exaResult)
+      stepsCompleted.push('fetch-exa')
+      itemsScraped += exaResult.total_results || 0
+    } catch (e) {
+      console.error('Exa fetch failed:', e)
+    }
+
+    // Step 5: Crawl sources with Firecrawl
+    console.log('Step 5: Crawling sources...')
     try {
       const crawlResponse = await fetchWithTimeout(
         `${supabaseUrl}/functions/v1/crawl-sources`,
@@ -128,8 +144,8 @@ Deno.serve(async (req) => {
       console.error('Crawl sources failed:', e)
     }
 
-    // Step 5: Score content
-    console.log('Step 5: Scoring content...')
+    // Step 6: Score content
+    console.log('Step 6: Scoring content...')
     try {
       const scoreResponse = await fetchWithTimeout(
         `${supabaseUrl}/functions/v1/score-content`,
@@ -143,8 +159,8 @@ Deno.serve(async (req) => {
       console.error('Score content failed:', e)
     }
 
-    // Step 6: Generate reading list (10-20 items)
-    console.log('Step 6: Generating reading list...')
+    // Step 7: Generate reading list (10-20 items)
+    console.log('Step 7: Generating reading list...')
     try {
       const readingListResponse = await fetchWithTimeout(
         `${supabaseUrl}/functions/v1/generate-reading-list`,
@@ -158,8 +174,8 @@ Deno.serve(async (req) => {
       console.error('Generate reading list failed:', e)
     }
 
-    // Step 7: Summarize content with AI
-    console.log('Step 7: Summarizing content with AI...')
+    // Step 8: Summarize content with AI
+    console.log('Step 8: Summarizing content with AI...')
     try {
       const summarizeResponse = await fetchWithTimeout(
         `${supabaseUrl}/functions/v1/summarize-content`,
@@ -173,8 +189,8 @@ Deno.serve(async (req) => {
       console.error('Summarize content failed:', e)
     }
 
-    // Step 8: Draft LinkedIn posts (3-5 posts)
-    console.log('Step 8: Drafting posts...')
+    // Step 9: Draft LinkedIn posts (3-5 posts)
+    console.log('Step 9: Drafting posts...')
     try {
       const draftsResponse = await fetchWithTimeout(
         `${supabaseUrl}/functions/v1/draft-posts`,

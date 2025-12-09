@@ -17,14 +17,15 @@ interface ScoringRule {
   points: number
 }
 
-// PRD v4.2: 5-tier scoring system with updated point values
+// PRD v4.2: 6-tier scoring system with comprehensive keywords
 const SCORING_RULES: Record<string, ScoringRule> = {
   peer_reviewed: {
     keywords: [
       'NEJM', 'New England Journal', 'Lancet', 'JAMA', 'Nature Medicine',
       'Nature Digital', 'BMJ', 'peer-reviewed', 'peer reviewed',
       'randomized controlled trial', 'RCT', 'meta-analysis', 'systematic review',
-      'double-blind', 'placebo-controlled', 'cohort study', 'PLOS', 'Cell'
+      'double-blind', 'placebo-controlled', 'cohort study', 'PLOS', 'Cell',
+      'Science', 'clinical trial'
     ],
     points: 25
   },
@@ -38,10 +39,12 @@ const SCORING_RULES: Record<string, ScoringRule> = {
   },
   clinical_validation: {
     keywords: [
-      'FDA clearance', 'FDA approval', 'FDA 510k', 'CE mark', 'AUC',
-      'sensitivity', 'specificity', 'sepsis', 'ICU', 'clinical trial',
-      'validation study', 'clinical validation', 'real-world evidence',
-      'prospective study', 'retrospective analysis', 'patient outcomes'
+      'FDA clearance', 'FDA approval', 'FDA approved', 'FDA cleared', 'FDA 510k',
+      'CE mark', 'AUC', 'sensitivity', 'specificity', 'sepsis', 'ICU',
+      'clinical trial', 'validation study', 'clinical validation', 'real-world evidence',
+      'prospective study', 'retrospective analysis', 'patient outcomes',
+      'critical care', 'mortality prediction', 'health equity', 'algorithmic bias',
+      'ROI', 'return on investment', 'success story', 'case study'
     ],
     points: 15
   },
@@ -49,14 +52,22 @@ const SCORING_RULES: Record<string, ScoringRule> = {
     keywords: [
       'MIT Technology Review', 'Wired', 'VentureBeat', 'Import AI',
       'TechCrunch', 'Ars Technica', 'The Batch', 'deeplearning.ai',
-      'The Verge', 'AI newsletter'
+      'The Verge', 'AI newsletter', 'LLM', 'GPT-4', 'Claude',
+      'Epic', 'Cosmos', 'OpenAI', 'Anthropic', 'Google DeepMind'
     ],
     points: 10
+  },
+  basic_healthcare: {
+    keywords: [
+      'AI', 'hospital', 'physician', 'telehealth', 'digital health'
+    ],
+    points: 5
   },
   penalties: {
     keywords: [
       'sponsored', 'advertisement', 'press release', 'paid content',
-      'promotional', 'sponsored content', 'partner content', 'advertorial'
+      'promotional', 'sponsored content', 'partner content', 'advertorial',
+      'affiliate'
     ],
     points: -15
   }
