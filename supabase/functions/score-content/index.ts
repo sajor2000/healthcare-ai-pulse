@@ -17,25 +17,48 @@ interface ScoringRule {
   points: number
 }
 
+// PRD v4.2: 5-tier scoring system with updated point values
 const SCORING_RULES: Record<string, ScoringRule> = {
-  high_value: {
-    keywords: ['FDA approval', 'clinical trial', 'peer-reviewed', 'hospital deployment',
-               'health equity', 'patient outcomes', 'regulatory', 'HIPAA'],
+  peer_reviewed: {
+    keywords: [
+      'NEJM', 'New England Journal', 'Lancet', 'JAMA', 'Nature Medicine',
+      'Nature Digital', 'BMJ', 'peer-reviewed', 'peer reviewed',
+      'randomized controlled trial', 'RCT', 'meta-analysis', 'systematic review',
+      'double-blind', 'placebo-controlled', 'cohort study', 'PLOS', 'Cell'
+    ],
+    points: 25
+  },
+  academic: {
+    keywords: [
+      'arXiv', 'medRxiv', 'bioRxiv', 'Stanford', 'MIT', 'Harvard',
+      'Mayo Clinic', 'Johns Hopkins', 'Cleveland Clinic', 'preprint',
+      'university research', 'academic medical center', 'research institute'
+    ],
     points: 20
   },
-  medium_value: {
-    keywords: ['AI', 'machine learning', 'deep learning', 'LLM', 'GPT', 'clinical decision',
-               'diagnostic', 'EHR', 'EMR', 'telehealth', 'remote monitoring'],
+  clinical_validation: {
+    keywords: [
+      'FDA clearance', 'FDA approval', 'FDA 510k', 'CE mark', 'AUC',
+      'sensitivity', 'specificity', 'sepsis', 'ICU', 'clinical trial',
+      'validation study', 'clinical validation', 'real-world evidence',
+      'prospective study', 'retrospective analysis', 'patient outcomes'
+    ],
+    points: 15
+  },
+  tech_blogs: {
+    keywords: [
+      'MIT Technology Review', 'Wired', 'VentureBeat', 'Import AI',
+      'TechCrunch', 'Ars Technica', 'The Batch', 'deeplearning.ai',
+      'The Verge', 'AI newsletter'
+    ],
     points: 10
   },
-  low_value: {
-    keywords: ['healthcare', 'health', 'medical', 'patient', 'physician', 'hospital',
-               'startup', 'funding', 'research'],
-    points: 5
-  },
   penalties: {
-    keywords: ['sponsored', 'advertisement', 'press release', 'opinion'],
-    points: -10
+    keywords: [
+      'sponsored', 'advertisement', 'press release', 'paid content',
+      'promotional', 'sponsored content', 'partner content', 'advertorial'
+    ],
+    points: -15
   }
 }
 

@@ -68,6 +68,10 @@ const DOMAIN_FILTER = [
 
   // AI-specific newsletters/blogs
   'bensbites.com',
+  'thesequence.substack.com',
+  'importai.substack.com',
+  'jack-clark.net',
+  'deeplearning.ai',
 
   // Healthcare IT news
   'healthcareitnews.com',
