@@ -1,11 +1,13 @@
-import { ExternalLink, Check, Circle, Bookmark, BookmarkCheck } from "lucide-react";
+import { ExternalLink, Check, Circle, Bookmark, BookmarkCheck, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface ReadingListItemProps {
   title: string;
   source: string;
   sourceType: string;
   summary: string;
+  keyPoints?: string[];
   relevanceScore: number;
   isRead: boolean;
   isSaved: boolean;
@@ -20,6 +22,7 @@ const ReadingListItem = ({
   source,
   sourceType,
   summary,
+  keyPoints,
   relevanceScore,
   isRead,
   isSaved,
@@ -28,6 +31,8 @@ const ReadingListItem = ({
   onToggleSave,
   index,
 }: ReadingListItemProps) => {
+  const [expanded, setExpanded] = useState(false);
+
   const getScoreClass = (score: number) => {
     if (score >= 80) return "score-high";
     if (score >= 50) return "score-medium";
@@ -45,6 +50,7 @@ const ReadingListItem = ({
   };
 
   const badge = getSourceTypeBadge(sourceType);
+  const hasKeyPoints = keyPoints && keyPoints.length > 0;
 
   return (
     <div 
@@ -93,9 +99,27 @@ const ReadingListItem = ({
             </div>
           </div>
           
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+          <p className={cn(
+            "text-sm text-muted-foreground mb-3",
+            !expanded && "line-clamp-2"
+          )}>
             {summary}
           </p>
+
+          {/* Key Points Section */}
+          {hasKeyPoints && expanded && (
+            <div className="mb-3 p-3 rounded-lg bg-secondary/50 border border-border/50">
+              <p className="text-xs font-semibold text-primary mb-2">Key Takeaways</p>
+              <ul className="space-y-1">
+                {keyPoints.map((point, i) => (
+                  <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -109,6 +133,24 @@ const ReadingListItem = ({
               <span className="text-xs text-muted-foreground">
                 {source}
               </span>
+              {hasKeyPoints && (
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  className="flex items-center gap-1 text-xs text-primary/70 hover:text-primary transition-colors"
+                >
+                  {expanded ? (
+                    <>
+                      <ChevronUp className="h-3 w-3" />
+                      Less
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-3 w-3" />
+                      Key points
+                    </>
+                  )}
+                </button>
+              )}
             </div>
             <a
               href={url}

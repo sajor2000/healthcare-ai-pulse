@@ -158,8 +158,23 @@ Deno.serve(async (req) => {
       console.error('Generate reading list failed:', e)
     }
 
-    // Step 7: Draft LinkedIn posts (3-5 posts)
-    console.log('Step 7: Drafting posts...')
+    // Step 7: Summarize content with AI
+    console.log('Step 7: Summarizing content with AI...')
+    try {
+      const summarizeResponse = await fetchWithTimeout(
+        `${supabaseUrl}/functions/v1/summarize-content`,
+        { method: 'POST', headers },
+        REQUEST_TIMEOUT
+      )
+      const summarizeResult = await summarizeResponse.json()
+      console.log('Summarize result:', summarizeResult)
+      stepsCompleted.push('summarize-content')
+    } catch (e) {
+      console.error('Summarize content failed:', e)
+    }
+
+    // Step 8: Draft LinkedIn posts (3-5 posts)
+    console.log('Step 8: Drafting posts...')
     try {
       const draftsResponse = await fetchWithTimeout(
         `${supabaseUrl}/functions/v1/draft-posts`,

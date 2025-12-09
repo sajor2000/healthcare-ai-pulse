@@ -17,6 +17,7 @@ interface ContentItem {
   title: string;
   url: string;
   summary: string | null;
+  key_points: string[] | null;
   relevance_score: number;
   is_read: boolean;
   is_saved: boolean;
@@ -56,6 +57,7 @@ const Index = () => {
               title,
               url,
               summary,
+              key_points,
               relevance_score,
               is_read,
               is_saved,
@@ -383,6 +385,7 @@ const Index = () => {
                   source={item.sources?.name || 'Unknown Source'}
                   sourceType={item.sources?.source_type || 'news'}
                   summary={item.summary || 'No summary available'}
+                  keyPoints={item.key_points || undefined}
                   relevanceScore={item.relevance_score}
                   isRead={item.is_read}
                   isSaved={item.is_saved}

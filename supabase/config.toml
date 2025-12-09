@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.fetch-arxiv]
 verify_jwt = false
+
+[functions.summarize-content]
+verify_jwt = false
