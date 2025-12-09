@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// UPDATED: Specialized search queries for user's focus areas
+// PRD v4.2: 19 specialized search queries
 const QUERIES = [
   // Healthcare AI LLM/ML/Deep Learning
   "healthcare AI LLM large language model clinical applications news",
@@ -23,6 +23,7 @@ const QUERIES = [
 
   // Big Tech AI Strategy
   "OpenAI healthcare medical AI strategy GPT clinical enterprise",
+  "Anthropic Claude healthcare medical applications enterprise",
   "Microsoft Azure health AI Nuance DAX copilot ambient documentation",
 
   // Health Equity & Fairness
@@ -34,7 +35,8 @@ const QUERIES = [
 
   // ROI & Success Stories
   "healthcare AI ROI return on investment case study implementation",
-  "AI success stories hospital health system deployment outcomes"
+  "AI success stories hospital health system deployment outcomes",
+  "healthcare AI value realization cost savings efficiency gains"
 ]
 
 // Domain filter prioritizing peer-reviewed journals, academic sources, top AI tech blogs

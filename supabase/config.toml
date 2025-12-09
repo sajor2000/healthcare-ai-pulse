@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.summarize-content]
 verify_jwt = false
+
+[functions.fetch-exa]
+verify_jwt = false

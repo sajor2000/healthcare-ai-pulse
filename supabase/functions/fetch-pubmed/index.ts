@@ -37,12 +37,32 @@ interface PaperData {
 const PUBMED_BASE = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils'
 const REQUEST_TIMEOUT = 30000
 
+// PRD v4.2: 17 comprehensive search terms
 const SEARCH_TERMS = [
-  'artificial intelligence healthcare',
-  'machine learning clinical decision',
-  'large language model medicine',
-  'AI diagnostic accuracy',
-  'deep learning radiology'
+  // LLM & NLP in Medicine
+  'large language model clinical decision support',
+  'GPT-4 medical diagnosis accuracy',
+  'natural language processing electronic health records',
+
+  // Critical Care AI
+  'machine learning critical care mortality prediction',
+  'deep learning sepsis early detection ICU',
+  'artificial intelligence mechanical ventilation weaning',
+  'predictive analytics intensive care unit',
+
+  // Inpatient/Outpatient
+  'machine learning hospital readmission prediction',
+  'AI clinical deterioration early warning',
+  'deep learning outpatient diagnosis screening',
+
+  // Fairness & Equity
+  'algorithmic fairness healthcare machine learning',
+  'racial bias clinical prediction models',
+  'health equity artificial intelligence disparities',
+
+  // Clinical Validation
+  'machine learning clinical validation prospective',
+  'AI FDA clearance medical device'
 ]
 
 async function fetchWithTimeout(url: string, timeout: number): Promise<Response> {

@@ -50,7 +50,8 @@ Deno.serve(async (req) => {
 
   try {
     console.log('Starting arXiv fetch...')
-    const query = encodeURIComponent('cat:cs.AI AND (all:healthcare OR all:medical OR all:clinical OR all:diagnosis)')
+    // PRD v4.2: Expanded query with ICU, critical care, hospital, fairness
+    const query = encodeURIComponent('cat:cs.AI AND (all:healthcare OR all:medical OR all:clinical OR all:ICU OR all:critical care OR all:hospital OR all:fairness)')
     const url = `${ARXIV_API}?search_query=${query}&start=0&max_results=20&sortBy=submittedDate&sortOrder=descending`
 
     const res = await fetchWithTimeout(url, REQUEST_TIMEOUT)
