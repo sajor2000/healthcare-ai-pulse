@@ -1,5 +1,5 @@
 import { NavLink } from "@/components/NavLink";
-import { Newspaper, Database, Settings, Sparkles } from "lucide-react";
+import { Newspaper, Database, Settings, Sparkles, History } from "lucide-react";
 
 const Navbar = () => {
   return (
@@ -31,6 +31,14 @@ const Navbar = () => {
             >
               <Database className="h-4 w-4" />
               Sources
+            </NavLink>
+            <NavLink
+              to="/history"
+              className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary"
+              activeClassName="text-foreground bg-secondary"
+            >
+              <History className="h-4 w-4" />
+              History
             </NavLink>
             <NavLink
               to="/settings"

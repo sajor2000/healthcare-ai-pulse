@@ -1,25 +1,31 @@
-import { ExternalLink, Check, Circle } from "lucide-react";
+import { ExternalLink, Check, Circle, Bookmark, BookmarkCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ReadingListItemProps {
   title: string;
   source: string;
+  sourceType: string;
   summary: string;
   relevanceScore: number;
   isRead: boolean;
+  isSaved: boolean;
   url: string;
   onToggleRead: () => void;
+  onToggleSave: () => void;
   index: number;
 }
 
 const ReadingListItem = ({
   title,
   source,
+  sourceType,
   summary,
   relevanceScore,
   isRead,
+  isSaved,
   url,
   onToggleRead,
+  onToggleSave,
   index,
 }: ReadingListItemProps) => {
   const getScoreClass = (score: number) => {
@@ -27,6 +33,18 @@ const ReadingListItem = ({
     if (score >= 50) return "score-medium";
     return "score-low";
   };
+
+  const getSourceTypeBadge = (type: string) => {
+    const badges: Record<string, { bg: string; text: string; label: string }> = {
+      news: { bg: "bg-blue-500/20", text: "text-blue-400", label: "News" },
+      blog: { bg: "bg-purple-500/20", text: "text-purple-400", label: "Blog" },
+      journal: { bg: "bg-emerald-500/20", text: "text-emerald-400", label: "Research" },
+      policy: { bg: "bg-orange-500/20", text: "text-orange-400", label: "Policy" },
+    };
+    return badges[type] || badges.news;
+  };
+
+  const badge = getSourceTypeBadge(sourceType);
 
   return (
     <div 
@@ -40,6 +58,7 @@ const ReadingListItem = ({
         <button
           onClick={onToggleRead}
           className="mt-1 flex-shrink-0 transition-colors hover:text-primary"
+          aria-label={isRead ? "Mark as unread" : "Mark as read"}
         >
           {isRead ? (
             <Check className="h-5 w-5 text-success" />
@@ -56,9 +75,22 @@ const ReadingListItem = ({
             )}>
               {title}
             </h3>
-            <span className={cn("score-badge flex-shrink-0", getScoreClass(relevanceScore))}>
-              {relevanceScore}%
-            </span>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className={cn("score-badge", getScoreClass(relevanceScore))}>
+                {relevanceScore}%
+              </span>
+              <button
+                onClick={onToggleSave}
+                className="transition-colors hover:text-primary"
+                aria-label={isSaved ? "Remove from saved" : "Save for later"}
+              >
+                {isSaved ? (
+                  <BookmarkCheck className="h-4 w-4 text-primary" />
+                ) : (
+                  <Bookmark className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+            </div>
           </div>
           
           <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
@@ -66,9 +98,18 @@ const ReadingListItem = ({
           </p>
           
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-              {source}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className={cn(
+                "text-xs font-medium px-2 py-0.5 rounded",
+                badge.bg,
+                badge.text
+              )}>
+                {badge.label}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {source}
+              </span>
+            </div>
             <a
               href={url}
               target="_blank"
