@@ -1,5 +1,5 @@
 import { NavLink } from "@/components/NavLink";
-import { Newspaper, Database, Settings, Sparkles, History } from "lucide-react";
+import { Newspaper, Database, Settings, Sparkles, History, Linkedin } from "lucide-react";
 
 const Navbar = () => {
   return (
@@ -22,7 +22,15 @@ const Navbar = () => {
               activeClassName="text-foreground bg-secondary"
             >
               <Newspaper className="h-4 w-4" />
-              Dashboard
+              Reading
+            </NavLink>
+            <NavLink
+              to="/linkedin"
+              className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary"
+              activeClassName="text-foreground bg-secondary"
+            >
+              <Linkedin className="h-4 w-4" />
+              LinkedIn
             </NavLink>
             <NavLink
               to="/sources"
