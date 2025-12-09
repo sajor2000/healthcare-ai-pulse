@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { CalendarDays, ChevronRight, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +13,7 @@ interface HistoryItem {
 }
 
 const History = () => {
+  const navigate = useNavigate();
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -84,6 +86,7 @@ const History = () => {
                 key={item.id}
                 className="glass-card p-4 animate-slide-up hover:border-primary/30 transition-all cursor-pointer"
                 style={{ animationDelay: `${index * 50}ms` }}
+                onClick={() => navigate(`/?date=${item.list_date}`)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">

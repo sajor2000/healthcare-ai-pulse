@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import ReadingListItem from "@/components/dashboard/ReadingListItem";
 import { CalendarDays, BookOpen, CheckCircle2, Clock, RefreshCw, Loader2, Filter, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
@@ -37,12 +38,27 @@ interface ContentItem {
 }
 
 const Index = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [readingList, setReadingList] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sourceFilter, setSourceFilter] = useState<SourceType>("all");
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [availableDates, setAvailableDates] = useState<string[]>([]);
+
+  // Initialize date from URL or use today
+  const getInitialDate = () => {
+    const dateParam = searchParams.get('date');
+    if (dateParam) {
+      try {
+        return parseISO(dateParam);
+      } catch {
+        return new Date();
+      }
+    }
+    return new Date();
+  };
+
+  const [selectedDate, setSelectedDate] = useState<Date>(getInitialDate);
 
   const fetchAvailableDates = async () => {
     const { data } = await supabase
@@ -111,6 +127,11 @@ const Index = () => {
 
   useEffect(() => {
     fetchData(selectedDate);
+    // Update URL when date changes
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    if (searchParams.get('date') !== dateStr) {
+      setSearchParams({ date: dateStr }, { replace: true });
+    }
   }, [selectedDate]);
 
   const handlePrevDay = () => {
