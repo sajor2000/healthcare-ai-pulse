@@ -5,21 +5,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const POST_TYPES = ['research', 'news', 'insight', 'trend', 'opinion']
-const NUM_POSTS = 5
+// Generate exactly 3 posts for the top 3 most interesting articles
+const NUM_POSTS = 3
 
-const SYSTEM_PROMPT = `You are a healthcare AI thought leader writing LinkedIn posts.
+const SYSTEM_PROMPT = `You are a healthcare AI thought leader writing LinkedIn posts for a community of:
+- Healthcare AI professionals and executives
+- ICU physicians and critical care specialists  
+- Operational AI leaders in health systems
+
 Write engaging, professional posts that:
-- Start with a compelling hook (first line appears in preview)
-- Share 2-3 key insights from the article
-- Add practical implications for healthcare professionals
-- End with a thought-provoking question or call to action
-- Include 3-5 relevant hashtags (#HealthcareAI #DigitalHealth etc.)
-- Keep under 250 words total
+- Start with a compelling hook that grabs attention in the LinkedIn feed preview
+- Share 2-3 key insights from the article with clinical or operational relevance
+- Add practical implications for healthcare professionals, especially ICU/critical care and operational leaders
+- Connect insights to health equity and evidence-based medicine when relevant
+- End with a thought-provoking question or call to action that encourages discussion
+- Include 3-5 relevant hashtags (#HealthcareAI #CriticalCare #ICU #DigitalHealth #HealthEquity etc.)
+- Keep under 250 words total (LinkedIn optimal length)
 - Cite the source with [Read more: URL]
 
-Tone: Authoritative but accessible. Evidence-based. Health equity aware.
-Avoid: Hype, sensationalism, unsubstantiated claims.`
+Tone: Authoritative but accessible. Evidence-based. Health equity aware. Physician-friendly.
+Focus areas: Clinical AI, ICU/critical care AI, health system operations, peer-reviewed research.
+Avoid: Hype, sensationalism, unsubstantiated claims, overly technical jargon.`
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -67,21 +73,28 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Get top items for post generation
+    // Get TOP 3 items by relevance score for post generation (most interesting articles)
     const topItems = (readingList.reading_list_items || [])
-      .sort((a: any, b: any) => a.rank - b.rank)
+      .map((item: any) => item.content_items)
+      .filter((item: any) => item?.id && item?.title)
+      .sort((a: any, b: any) => (b.relevance_score || 0) - (a.relevance_score || 0))
       .slice(0, NUM_POSTS)
-      .map((item: any) => ({ ...item.content_items, content_item_id: item.content_item_id }))
 
-    console.log(`Generating ${topItems.length} draft posts`)
+    console.log(`Generating ${topItems.length} draft posts for top articles by relevance`)
+
+    // Clear any existing drafts for today to avoid duplicates
+    await supabase
+      .from('draft_posts')
+      .delete()
+      .eq('reading_list_id', readingList.id)
+      .eq('status', 'draft')
 
     const drafts = []
 
     for (let i = 0; i < topItems.length; i++) {
       const item = topItems[i]
-      const postType = POST_TYPES[i % POST_TYPES.length]
 
-      console.log(`Generating ${postType} post for: ${item.title?.substring(0, 50)}...`)
+      console.log(`Generating post #${i + 1} for: ${item.title?.substring(0, 50)}... (score: ${item.relevance_score})`)
 
       try {
         const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -97,21 +110,16 @@ Deno.serve(async (req) => {
             system: SYSTEM_PROMPT,
             messages: [{
               role: 'user',
-              content: `Write a ${postType}-style LinkedIn post about this healthcare AI content:
+              content: `Write a LinkedIn post about this healthcare AI content. This is article #${i + 1} of the top 3 most relevant articles today (relevance score: ${item.relevance_score}/100).
 
 Title: ${item.title}
 Summary: ${item.summary || 'No summary available'}
 Source URL: ${item.url}
+${item.key_points?.length ? `Key Points:\n${item.key_points.map((p: string) => `- ${p}`).join('\n')}` : ''}
 
 ${item.full_text ? `Article excerpt:\n${item.full_text.substring(0, 2000)}` : ''}
 
-Remember: This is a ${postType} post, so ${
-                postType === 'research' ? 'focus on methodology and findings' :
-                postType === 'news' ? 'highlight the news value and timeliness' :
-                postType === 'insight' ? 'provide your analysis and interpretation' :
-                postType === 'trend' ? 'connect this to broader industry trends' :
-                'share your professional opinion and experience'
-              }.`
+Write a compelling post that will resonate with ICU physicians, healthcare AI professionals, and operational AI leaders. Focus on clinical relevance and practical implications.`
             }]
           })
         })
@@ -119,7 +127,7 @@ Remember: This is a ${postType} post, so ${
         if (!response.ok) {
           const errorText = await response.text()
           console.error(`Claude API error: ${response.status} - ${errorText}`)
-          drafts.push({ post_type: postType, status: 'failed', error: `API error: ${response.status}` })
+          drafts.push({ status: 'failed', error: `API error: ${response.status}` })
           continue
         }
 
@@ -131,31 +139,31 @@ Remember: This is a ${postType} post, so ${
           reading_list_id: readingList.id,
           content_item_id: item.id,
           draft_text: draftText,
-          post_type: postType,
+          post_type: 'curated',
           status: 'draft'
         }).select().single()
 
         if (insertError) {
           console.error(`Insert error:`, insertError)
-          drafts.push({ post_type: postType, status: 'failed', error: insertError.message })
+          drafts.push({ status: 'failed', error: insertError.message })
         } else {
-          drafts.push({ id: draft?.id, post_type: postType, status: 'created' })
+          drafts.push({ id: draft?.id, title: item.title?.substring(0, 50), status: 'created' })
         }
 
         // Rate limit between Claude calls
         await new Promise(resolve => setTimeout(resolve, 500))
 
       } catch (llmError) {
-        console.error(`Failed to generate ${postType} post:`, llmError)
+        console.error(`Failed to generate post #${i + 1}:`, llmError)
         const llmErrorMessage = llmError instanceof Error ? llmError.message : 'Unknown error'
-        drafts.push({ post_type: postType, status: 'failed', error: llmErrorMessage })
+        drafts.push({ status: 'failed', error: llmErrorMessage })
       }
     }
 
     console.log('Draft generation completed:', drafts)
 
     return new Response(
-      JSON.stringify({ success: true, drafts }),
+      JSON.stringify({ success: true, drafts, count: drafts.filter(d => d.status === 'created').length }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
