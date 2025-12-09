@@ -1,59 +1,129 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import SourceCard from "@/components/sources/SourceCard";
 import AddSourceDialog from "@/components/sources/AddSourceDialog";
-import { Database, Filter } from "lucide-react";
+import { Database, Filter, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
-const mockSources = [
-  { id: "1", name: "Nature Medicine", url: "https://nature.com/nm", sourceType: "website", isActive: true },
-  { id: "2", name: "STAT News", url: "https://statnews.com", sourceType: "rss", isActive: true },
-  { id: "3", name: "JAMA Network", url: "https://jamanetwork.com", sourceType: "api", isActive: true },
-  { id: "4", name: "Healthcare IT News", url: "https://healthcareitnews.com", sourceType: "rss", isActive: true },
-  { id: "5", name: "Modern Healthcare", url: "https://modernhealthcare.com", sourceType: "website", isActive: false },
-  { id: "6", name: "The Lancet Digital Health", url: "https://thelancet.com/digital-health", sourceType: "api", isActive: true },
-  { id: "7", name: "BioPharma Dive", url: "https://biopharmadive.com", sourceType: "rss", isActive: true },
-  { id: "8", name: "Science Daily - Health", url: "https://sciencedaily.com/health", sourceType: "rss", isActive: true },
-];
+interface Source {
+  id: string;
+  name: string;
+  url: string;
+  source_type: string | null;
+  is_active: boolean | null;
+  last_crawled_at: string | null;
+}
 
 const Sources = () => {
-  const [sources, setSources] = useState(mockSources);
+  const [sources, setSources] = useState<Source[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleToggle = (id: string, isActive: boolean) => {
+  const fetchSources = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('sources')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setSources(data || []);
+    } catch (error) {
+      console.error('Error fetching sources:', error);
+      toast({ title: "Error", description: "Failed to load sources", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSources();
+  }, []);
+
+  const handleToggle = async (id: string, isActive: boolean) => {
     setSources(prev =>
       prev.map(source =>
-        source.id === id ? { ...source, isActive } : source
+        source.id === id ? { ...source, is_active: isActive } : source
       )
     );
-    toast({
-      title: isActive ? "Source activated" : "Source deactivated",
-      description: `The source has been ${isActive ? "enabled" : "disabled"}.`,
-    });
+
+    const { error } = await supabase
+      .from('sources')
+      .update({ is_active: isActive })
+      .eq('id', id);
+
+    if (error) {
+      setSources(prev =>
+        prev.map(source =>
+          source.id === id ? { ...source, is_active: !isActive } : source
+        )
+      );
+      toast({ title: "Error", description: "Failed to update source", variant: "destructive" });
+    } else {
+      toast({
+        title: isActive ? "Source activated" : "Source deactivated",
+        description: `The source has been ${isActive ? "enabled" : "disabled"}.`,
+      });
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    const sourceToDelete = sources.find(s => s.id === id);
     setSources(prev => prev.filter(source => source.id !== id));
-    toast({
-      title: "Source removed",
-      description: "The source has been removed from your list.",
-      variant: "destructive",
-    });
+
+    const { error } = await supabase
+      .from('sources')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      if (sourceToDelete) {
+        setSources(prev => [...prev, sourceToDelete]);
+      }
+      toast({ title: "Error", description: "Failed to delete source", variant: "destructive" });
+    } else {
+      toast({
+        title: "Source removed",
+        description: "The source has been removed from your list.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleAdd = (source: { name: string; url: string; sourceType: string }) => {
-    const newSource = {
-      id: Date.now().toString(),
-      ...source,
-      isActive: true,
-    };
-    setSources(prev => [...prev, newSource]);
-    toast({
-      title: "Source added",
-      description: `${source.name} has been added to your sources.`,
-    });
+  const handleAdd = async (source: { name: string; url: string; sourceType: string }) => {
+    const { data, error } = await supabase
+      .from('sources')
+      .insert({
+        name: source.name,
+        url: source.url,
+        source_type: source.sourceType,
+        is_active: true
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to add source", variant: "destructive" });
+    } else if (data) {
+      setSources(prev => [...prev, data]);
+      toast({
+        title: "Source added",
+        description: `${source.name} has been added to your sources.`,
+      });
+    }
   };
 
-  const activeCount = sources.filter(s => s.isActive).length;
+  const activeCount = sources.filter(s => s.is_active).length;
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-6 py-8 flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -77,7 +147,11 @@ const Sources = () => {
           {sources.map((source, index) => (
             <SourceCard
               key={source.id}
-              {...source}
+              id={source.id}
+              name={source.name}
+              url={source.url}
+              sourceType={source.source_type || 'news'}
+              isActive={source.is_active ?? true}
               onToggle={handleToggle}
               onDelete={handleDelete}
               index={index}

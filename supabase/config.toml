@@ -1,1 +1,19 @@
 project_id = "gygjmxhhbpztwiserxob"
+
+[functions.daily-pipeline]
+verify_jwt = false
+
+[functions.perplexity-search]
+verify_jwt = false
+
+[functions.crawl-sources]
+verify_jwt = false
+
+[functions.score-content]
+verify_jwt = false
+
+[functions.generate-reading-list]
+verify_jwt = false
+
+[functions.draft-posts]
+verify_jwt = false
