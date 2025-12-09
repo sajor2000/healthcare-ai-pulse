@@ -2,7 +2,8 @@ import { useState } from "react";
 import Layout from "@/components/layout/Layout";
 import ReadingListItem from "@/components/dashboard/ReadingListItem";
 import DraftPost from "@/components/dashboard/DraftPost";
-import { CalendarDays, BookOpen, FileEdit } from "lucide-react";
+import { CalendarDays, BookOpen, FileEdit, CheckCircle2, Clock, Send } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Mock data for demonstration
 const mockReadingList = [
@@ -191,6 +192,9 @@ const Index = () => {
   });
 
   const unreadCount = readingList.filter(item => !item.isRead).length;
+  const readCount = readingList.filter(item => item.isRead).length;
+  const draftsCount = draftPosts.filter(p => p.status === "draft").length;
+  const approvedCount = draftPosts.filter(p => p.status === "approved").length;
 
   return (
     <Layout>
@@ -201,25 +205,81 @@ const Index = () => {
             <CalendarDays className="h-4 w-4" />
             <span className="text-sm">{today}</span>
           </div>
-          <h1 className="text-3xl font-bold mb-2">
+          <h1 className="text-3xl font-bold mb-4">
             Good morning, <span className="gradient-text">Doctor</span>
           </h1>
-          <p className="text-muted-foreground">
-            {unreadCount} articles to review • 3 draft posts ready for your review
-          </p>
+          
+          {/* Dual Purpose Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+            <div className="glass-card p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                  <Clock className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{unreadCount}</p>
+                  <p className="text-xs text-muted-foreground">To Read</p>
+                </div>
+              </div>
+            </div>
+            <div className="glass-card p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10">
+                  <CheckCircle2 className="h-5 w-5 text-success" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{readCount}</p>
+                  <p className="text-xs text-muted-foreground">Completed</p>
+                </div>
+              </div>
+            </div>
+            <div className="glass-card p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10">
+                  <FileEdit className="h-5 w-5 text-warning" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{draftsCount}</p>
+                  <p className="text-xs text-muted-foreground">Drafts</p>
+                </div>
+              </div>
+            </div>
+            <div className="glass-card p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                  <Send className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{approvedCount}</p>
+                  <p className="text-xs text-muted-foreground">Ready to Post</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Reading List Section */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <BookOpen className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Today's Reading List</h2>
-              <span className="text-xs font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded">
-                {readingList.length} articles
-              </span>
+        {/* Tabbed Interface for Dual Purpose */}
+        <Tabs defaultValue="reading" className="animate-fade-in">
+          <TabsList className="grid w-full max-w-md grid-cols-2 mb-6 bg-secondary">
+            <TabsTrigger value="reading" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <BookOpen className="h-4 w-4" />
+              My Reading List
+            </TabsTrigger>
+            <TabsTrigger value="content" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <FileEdit className="h-4 w-4" />
+              LinkedIn Content
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Reading List Tab */}
+          <TabsContent value="reading" className="animate-slide-up">
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold mb-1">Today's Curated Articles</h2>
+              <p className="text-sm text-muted-foreground">
+                Stay informed with the latest healthcare AI developments. Mark articles as read to track your progress.
+              </p>
             </div>
-            <div className="space-y-3">
+            <div className="grid gap-3">
               {readingList.map((item, index) => (
                 <ReadingListItem
                   key={item.id}
@@ -229,18 +289,17 @@ const Index = () => {
                 />
               ))}
             </div>
-          </div>
+          </TabsContent>
 
-          {/* Draft Posts Section */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <FileEdit className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold">Draft Posts</h2>
-              <span className="text-xs font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded">
-                {draftPosts.length} drafts
-              </span>
+          {/* Content Creation Tab */}
+          <TabsContent value="content" className="animate-slide-up">
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold mb-1">LinkedIn Draft Posts</h2>
+              <p className="text-sm text-muted-foreground">
+                AI-generated posts based on today's top articles. Edit, refine, and approve before sharing.
+              </p>
             </div>
-            <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {draftPosts.map((post, index) => (
                 <DraftPost
                   key={post.id}
@@ -251,8 +310,8 @@ const Index = () => {
                 />
               ))}
             </div>
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
