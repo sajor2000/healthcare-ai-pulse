@@ -15,7 +15,9 @@ import {
   Save,
   Play,
   Loader2,
-  CheckCircle
+  CheckCircle,
+  GraduationCap,
+  FlaskConical
 } from "lucide-react";
 
 const SETTINGS_STORAGE_KEY = 'healthcare-ai-daily-settings';
@@ -25,6 +27,11 @@ interface AppSettings {
   digestTime: string;
   autoApprove: boolean;
   articlesPerDay: string;
+  // Scientific journal preferences
+  includePeerReviewed: boolean;
+  includePreprints: boolean;
+  minCitationCount: string;
+  boostHighImpactJournals: boolean;
 }
 
 const defaultSettings: AppSettings = {
@@ -32,6 +39,11 @@ const defaultSettings: AppSettings = {
   digestTime: "07:00",
   autoApprove: false,
   articlesPerDay: "15",
+  // Scientific journal defaults
+  includePeerReviewed: true,
+  includePreprints: true,
+  minCitationCount: "0",
+  boostHighImpactJournals: true,
 };
 
 const loadSettings = (): AppSettings => {
@@ -153,6 +165,87 @@ const Settings = () => {
               <p className="text-xs text-muted-foreground">
                 Pipeline runs automatically daily at your configured time. You can also trigger it manually.
               </p>
+            </div>
+          </section>
+
+          {/* Scientific Journals Section */}
+          <section className="glass-card p-6 animate-slide-up" style={{ animationDelay: "50ms" }}>
+            <div className="flex items-center gap-2 mb-4">
+              <GraduationCap className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-semibold">Scientific Publications</h2>
+            </div>
+            
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Configure how scientific papers from PubMed and arXiv are prioritized in your reading list.
+              </p>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-emerald-500" />
+                  <div>
+                    <p className="font-medium">Include Peer-Reviewed Articles</p>
+                    <p className="text-sm text-muted-foreground">
+                      Show published journal articles from PubMed
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={settings.includePeerReviewed}
+                  onCheckedChange={(checked) => setSettings({ ...settings, includePeerReviewed: checked })}
+                />
+              </div>
+
+              <Separator className="bg-border" />
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FlaskConical className="h-4 w-4 text-amber-500" />
+                  <div>
+                    <p className="font-medium">Include Preprints</p>
+                    <p className="text-sm text-muted-foreground">
+                      Show arXiv preprints (not yet peer-reviewed)
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={settings.includePreprints}
+                  onCheckedChange={(checked) => setSettings({ ...settings, includePreprints: checked })}
+                />
+              </div>
+
+              <Separator className="bg-border" />
+
+              <div className="space-y-2">
+                <Label htmlFor="minCitations">Minimum Citation Count</Label>
+                <Input
+                  id="minCitations"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={settings.minCitationCount}
+                  onChange={(e) => setSettings({ ...settings, minCitationCount: e.target.value })}
+                  className="bg-secondary border-border w-24"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Only show papers with at least this many citations (0 = show all)
+                </p>
+              </div>
+
+              <Separator className="bg-border" />
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Boost High-Impact Journals</p>
+                  <p className="text-sm text-muted-foreground">
+                    Prioritize papers from top-tier medical and AI journals
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.boostHighImpactJournals}
+                  onCheckedChange={(checked) => setSettings({ ...settings, boostHighImpactJournals: checked })}
+                />
+              </div>
             </div>
           </section>
 

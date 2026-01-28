@@ -35,6 +35,17 @@ interface ContentItem {
   source_id: string | null;
   pub_date: string | null;
   sources?: { name: string; source_type: string } | null;
+  // Academic metadata
+  doi?: string | null;
+  pmid?: string | null;
+  arxiv_id?: string | null;
+  abstract?: string | null;
+  journal_name?: string | null;
+  citation_count?: number | null;
+  pdf_url?: string | null;
+  mesh_terms?: string[] | null;
+  publication_type?: string | null;
+  authors?: string | null;
 }
 
 const Index = () => {
@@ -95,6 +106,16 @@ const Index = () => {
               is_saved,
               source_id,
               pub_date,
+              doi,
+              pmid,
+              arxiv_id,
+              abstract,
+              journal_name,
+              citation_count,
+              pdf_url,
+              mesh_terms,
+              publication_type,
+              authors,
               sources (name, source_type)
             )
           )
@@ -427,6 +448,7 @@ const Index = () => {
               {filteredReadingList.map((item, index) => (
                 <ReadingListItem
                   key={item.id}
+                  id={item.id}
                   title={item.title}
                   source={item.sources?.name || 'Unknown Source'}
                   sourceType={item.sources?.source_type || 'journal'}
@@ -440,6 +462,16 @@ const Index = () => {
                   onToggleRead={() => handleToggleRead(item.id)}
                   onToggleSave={() => handleToggleSave(item.id)}
                   index={index}
+                  doi={item.doi}
+                  pmid={item.pmid}
+                  arxivId={item.arxiv_id}
+                  abstract={item.abstract}
+                  journalName={item.journal_name}
+                  citationCount={item.citation_count || 0}
+                  pdfUrl={item.pdf_url}
+                  meshTerms={item.mesh_terms || []}
+                  publicationType={item.publication_type}
+                  authors={item.authors}
                 />
               ))}
             </div>
