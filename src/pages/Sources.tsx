@@ -3,7 +3,9 @@ import Layout from "@/components/layout/Layout";
 import SourceCard from "@/components/sources/SourceCard";
 import AddSourceDialog from "@/components/sources/AddSourceDialog";
 import BulkImportDialog from "@/components/sources/BulkImportDialog";
-import { Database, Filter, Loader2 } from "lucide-react";
+import SourceAnalytics from "@/components/sources/SourceAnalytics";
+import { Database, Filter, Loader2, BarChart3 } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -208,39 +210,53 @@ const Sources = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mb-4">
-          <Database className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">Configured Sources</h2>
-        </div>
+        <Tabs defaultValue="analytics" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value="sources" className="flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              Sources ({sources.length})
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="space-y-3">
-          {sources.map((source, index) => (
-            <SourceCard
-              key={source.id}
-              id={source.id}
-              name={source.name}
-              url={source.url}
-              sourceType={source.source_type || 'news'}
-              isActive={source.is_active ?? true}
-              priority={source.priority ?? 3}
-              onToggle={handleToggle}
-              onDelete={handleDelete}
-              onPriorityChange={handlePriorityChange}
-              index={index}
-            />
-          ))}
-        </div>
+          <TabsContent value="analytics">
+            <SourceAnalytics />
+          </TabsContent>
 
-        {sources.length === 0 && (
-          <div className="glass-card p-12 text-center">
-            <Filter className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">No sources configured</h3>
-            <p className="text-muted-foreground mb-4">
-              Add your first news source to start tracking healthcare AI content.
-            </p>
-            <AddSourceDialog onAdd={handleAdd} />
-          </div>
-        )}
+          <TabsContent value="sources">
+            <div className="space-y-3">
+              {sources.map((source, index) => (
+                <SourceCard
+                  key={source.id}
+                  id={source.id}
+                  name={source.name}
+                  url={source.url}
+                  sourceType={source.source_type || 'news'}
+                  isActive={source.is_active ?? true}
+                  priority={source.priority ?? 3}
+                  onToggle={handleToggle}
+                  onDelete={handleDelete}
+                  onPriorityChange={handlePriorityChange}
+                  index={index}
+                />
+              ))}
+            </div>
+
+            {sources.length === 0 && (
+              <div className="glass-card p-12 text-center">
+                <Filter className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">No sources configured</h3>
+                <p className="text-muted-foreground mb-4">
+                  Add your first news source to start tracking healthcare AI content.
+                </p>
+                <AddSourceDialog onAdd={handleAdd} />
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
