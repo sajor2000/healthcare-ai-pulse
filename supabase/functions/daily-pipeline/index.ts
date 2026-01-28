@@ -49,6 +49,28 @@ Deno.serve(async (req) => {
   let postsGenerated = 0
 
   try {
+    // Clean up stale pipeline runs (older than 30 minutes, still "running")
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString()
+    const { data: staleRuns } = await supabase
+      .from('pipeline_runs')
+      .select('id')
+      .eq('status', 'running')
+      .lt('started_at', thirtyMinutesAgo)
+    
+    if (staleRuns && staleRuns.length > 0) {
+      console.log(`Marking ${staleRuns.length} stale pipeline runs as failed`)
+      for (const run of staleRuns) {
+        await supabase
+          .from('pipeline_runs')
+          .update({
+            status: 'failed',
+            completed_at: new Date().toISOString(),
+            error_message: 'Pipeline run timed out (stale run cleanup)'
+          })
+          .eq('id', run.id)
+      }
+    }
+
     // Create pipeline run record
     await supabase.from('pipeline_runs').insert({
       id: pipelineRunId,

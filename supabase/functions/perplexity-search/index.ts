@@ -156,12 +156,34 @@ Deno.serve(async (req) => {
       for (const citation of citations) {
         if (citation) {
           const url = typeof citation === 'string' ? citation : citation.url
-          const title = typeof citation === 'object' ? citation.title : 'Discovered Article'
           const snippet = typeof citation === 'object' ? citation.snippet : null
+          
+          // Extract title from citation object, or derive from URL
+          let title = 'Untitled'
+          if (typeof citation === 'object' && citation.title) {
+            title = citation.title
+          } else if (url) {
+            // Try to extract a readable title from URL
+            try {
+              const urlObj = new URL(url)
+              const pathParts = urlObj.pathname.split('/').filter(p => p.length > 0)
+              if (pathParts.length > 0) {
+                // Use last path segment, clean it up
+                title = pathParts[pathParts.length - 1]
+                  .replace(/[-_]/g, ' ')
+                  .replace(/\.\w+$/, '') // Remove file extension
+                  .replace(/\b\w/g, c => c.toUpperCase()) // Title case
+              } else {
+                title = urlObj.hostname.replace('www.', '')
+              }
+            } catch {
+              title = 'Untitled Article'
+            }
+          }
           
           if (url) {
             const { error } = await supabase.from('content_items').upsert({
-              title: title || 'Untitled',
+              title: title,
               url: url,
               summary: snippet,
               pub_date: new Date().toISOString().split('T')[0]
