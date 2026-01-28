@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import SourceCard from "@/components/sources/SourceCard";
 import AddSourceDialog from "@/components/sources/AddSourceDialog";
+import BulkImportDialog from "@/components/sources/BulkImportDialog";
 import { Database, Filter, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -113,6 +114,30 @@ const Sources = () => {
     }
   };
 
+  const handleBulkImport = async (sources: { name: string; url: string; sourceType: string }[]) => {
+    const insertData = sources.map(source => ({
+      name: source.name,
+      url: source.url,
+      source_type: source.sourceType,
+      is_active: true
+    }));
+
+    const { data, error } = await supabase
+      .from('sources')
+      .insert(insertData)
+      .select();
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to import sources", variant: "destructive" });
+    } else if (data) {
+      setSources(prev => [...prev, ...data]);
+      toast({
+        title: "Sources imported",
+        description: `Successfully imported ${data.length} source${data.length !== 1 ? 's' : ''}.`,
+      });
+    }
+  };
+
   const activeCount = sources.filter(s => s.is_active).length;
 
   if (loading) {
@@ -135,7 +160,10 @@ const Sources = () => {
               {activeCount} of {sources.length} sources active
             </p>
           </div>
-          <AddSourceDialog onAdd={handleAdd} />
+          <div className="flex gap-2">
+            <BulkImportDialog onImport={handleBulkImport} />
+            <AddSourceDialog onAdd={handleAdd} />
+          </div>
         </div>
 
         <div className="flex items-center gap-2 mb-4">
