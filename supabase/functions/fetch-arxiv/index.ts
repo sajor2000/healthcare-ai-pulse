@@ -11,6 +11,10 @@ interface ArxivResult {
   summary: string
   pub_date: string
   authors: string
+  arxiv_id: string
+  abstract: string
+  pdf_url: string
+  publication_type: string
 }
 
 const ARXIV_API = 'http://export.arxiv.org/api/query'
@@ -27,6 +31,12 @@ async function fetchWithTimeout(url: string, timeout: number): Promise<Response>
     clearTimeout(timeoutId)
     throw error
   }
+}
+
+function extractArxivId(url: string): string {
+  // Extract arxiv ID from URL like http://arxiv.org/abs/2301.12345v1
+  const match = url.match(/arxiv\.org\/abs\/([^\s]+)/)
+  return match ? match[1].replace(/v\d+$/, '') : ''
 }
 
 Deno.serve(async (req) => {
@@ -49,7 +59,7 @@ Deno.serve(async (req) => {
   })
 
   try {
-    console.log('Starting arXiv fetch...')
+    console.log('Starting enhanced arXiv fetch with abstracts and PDF links...')
     // PRD v4.2: Expanded query with ICU, critical care, hospital, fairness
     const query = encodeURIComponent('cat:cs.AI AND (all:healthcare OR all:medical OR all:clinical OR all:ICU OR all:critical care OR all:hospital OR all:fairness)')
     const url = `${ARXIV_API}?search_query=${query}&start=0&max_results=20&sortBy=submittedDate&sortOrder=descending`
@@ -72,7 +82,10 @@ Deno.serve(async (req) => {
       const summaryMatch = entry.match(/<summary>([\s\S]*?)<\/summary>/)
       const publishedMatch = entry.match(/<published>([\s\S]*?)<\/published>/)
       const authorMatches = entry.match(/<author>\s*<name>([\s\S]*?)<\/name>/g) || []
-
+      
+      // Extract PDF link
+      const pdfLinkMatch = entry.match(/<link[^>]*title="pdf"[^>]*href="([^"]+)"/)
+      
       const title = titleMatch?.[1]?.replace(/\s+/g, ' ').trim() || ''
       const arxivUrl = idMatch?.[1]?.trim() || ''
       const summary = summaryMatch?.[1]?.replace(/\s+/g, ' ').trim() || ''
@@ -86,12 +99,19 @@ Deno.serve(async (req) => {
         continue
       }
 
+      const arxivId = extractArxivId(arxivUrl)
+      const pdfUrl = pdfLinkMatch?.[1] || `https://arxiv.org/pdf/${arxivId}.pdf`
+
       const paperData: ArxivResult = {
         title,
         url: arxivUrl,
         summary: summary.substring(0, 500),
         pub_date: published,
-        authors: authors || 'Unknown'
+        authors: authors || 'Unknown',
+        arxiv_id: arxivId,
+        abstract: summary, // arXiv summary is the abstract
+        pdf_url: pdfUrl,
+        publication_type: 'preprint'
       }
 
       results.push(paperData)
@@ -102,11 +122,15 @@ Deno.serve(async (req) => {
         url: paperData.url,
         summary: paperData.summary,
         authors: paperData.authors,
-        pub_date: paperData.pub_date
+        pub_date: paperData.pub_date,
+        arxiv_id: paperData.arxiv_id,
+        abstract: paperData.abstract,
+        pdf_url: paperData.pdf_url,
+        publication_type: paperData.publication_type
       }, { onConflict: 'url', ignoreDuplicates: true })
     }
 
-    console.log(`arXiv fetch completed: ${results.length} papers`)
+    console.log(`Enhanced arXiv fetch completed: ${results.length} papers with abstracts and PDF links`)
 
     return new Response(
       JSON.stringify({ success: true, papers: results.length, data: results }),

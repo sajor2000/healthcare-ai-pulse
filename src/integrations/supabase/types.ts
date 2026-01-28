@@ -16,14 +16,23 @@ export type Database = {
     Tables: {
       content_items: {
         Row: {
+          abstract: string | null
+          arxiv_id: string | null
           authors: string | null
+          citation_count: number | null
           created_at: string | null
+          doi: string | null
           full_text: string | null
           id: string
           is_read: boolean | null
           is_saved: boolean | null
+          journal_name: string | null
           key_points: string[] | null
+          mesh_terms: string[] | null
+          pdf_url: string | null
+          pmid: string | null
           pub_date: string | null
+          publication_type: string | null
           relevance_score: number | null
           scraped_at: string | null
           source_id: string | null
@@ -33,14 +42,23 @@ export type Database = {
           url: string
         }
         Insert: {
+          abstract?: string | null
+          arxiv_id?: string | null
           authors?: string | null
+          citation_count?: number | null
           created_at?: string | null
+          doi?: string | null
           full_text?: string | null
           id?: string
           is_read?: boolean | null
           is_saved?: boolean | null
+          journal_name?: string | null
           key_points?: string[] | null
+          mesh_terms?: string[] | null
+          pdf_url?: string | null
+          pmid?: string | null
           pub_date?: string | null
+          publication_type?: string | null
           relevance_score?: number | null
           scraped_at?: string | null
           source_id?: string | null
@@ -50,14 +68,23 @@ export type Database = {
           url: string
         }
         Update: {
+          abstract?: string | null
+          arxiv_id?: string | null
           authors?: string | null
+          citation_count?: number | null
           created_at?: string | null
+          doi?: string | null
           full_text?: string | null
           id?: string
           is_read?: boolean | null
           is_saved?: boolean | null
+          journal_name?: string | null
           key_points?: string[] | null
+          mesh_terms?: string[] | null
+          pdf_url?: string | null
+          pmid?: string | null
           pub_date?: string | null
+          publication_type?: string | null
           relevance_score?: number | null
           scraped_at?: string | null
           source_id?: string | null

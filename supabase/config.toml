@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.cleanup-old-data]
 verify_jwt = false
+
+[functions.fetch-paper-details]
+verify_jwt = false
