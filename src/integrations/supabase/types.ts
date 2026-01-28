@@ -262,6 +262,7 @@ export type Database = {
           last_crawled_at: string | null
           last_error: string | null
           name: string
+          priority: number | null
           source_type: string
           updated_at: string | null
           url: string
@@ -274,6 +275,7 @@ export type Database = {
           last_crawled_at?: string | null
           last_error?: string | null
           name: string
+          priority?: number | null
           source_type: string
           updated_at?: string | null
           url: string
@@ -286,6 +288,7 @@ export type Database = {
           last_crawled_at?: string | null
           last_error?: string | null
           name?: string
+          priority?: number | null
           source_type?: string
           updated_at?: string | null
           url?: string

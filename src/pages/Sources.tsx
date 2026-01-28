@@ -14,6 +14,7 @@ interface Source {
   source_type: string | null;
   is_active: boolean | null;
   last_crawled_at: string | null;
+  priority: number | null;
 }
 
 const Sources = () => {
@@ -25,6 +26,7 @@ const Sources = () => {
       const { data, error } = await supabase
         .from('sources')
         .select('*')
+        .order('priority', { ascending: false })
         .order('name');
 
       if (error) throw error;
@@ -68,6 +70,42 @@ const Sources = () => {
     }
   };
 
+  const handlePriorityChange = async (id: string, priority: number) => {
+    const oldPriority = sources.find(s => s.id === id)?.priority;
+    
+    setSources(prev =>
+      prev.map(source =>
+        source.id === id ? { ...source, priority } : source
+      )
+    );
+
+    const { error } = await supabase
+      .from('sources')
+      .update({ priority })
+      .eq('id', id);
+
+    if (error) {
+      setSources(prev =>
+        prev.map(source =>
+          source.id === id ? { ...source, priority: oldPriority ?? 3 } : source
+        )
+      );
+      toast({ title: "Error", description: "Failed to update priority", variant: "destructive" });
+    } else {
+      const priorityLabels: Record<number, string> = {
+        1: "Low",
+        2: "Below Average",
+        3: "Normal",
+        4: "High",
+        5: "Critical"
+      };
+      toast({
+        title: "Priority updated",
+        description: `Source priority set to ${priorityLabels[priority]}.`,
+      });
+    }
+  };
+
   const handleDelete = async (id: string) => {
     const sourceToDelete = sources.find(s => s.id === id);
     setSources(prev => prev.filter(source => source.id !== id));
@@ -98,7 +136,8 @@ const Sources = () => {
         name: source.name,
         url: source.url,
         source_type: source.sourceType,
-        is_active: true
+        is_active: true,
+        priority: 3
       })
       .select()
       .single();
@@ -119,7 +158,8 @@ const Sources = () => {
       name: source.name,
       url: source.url,
       source_type: source.sourceType,
-      is_active: true
+      is_active: true,
+      priority: 3
     }));
 
     const { data, error } = await supabase
@@ -139,6 +179,7 @@ const Sources = () => {
   };
 
   const activeCount = sources.filter(s => s.is_active).length;
+  const highPriorityCount = sources.filter(s => (s.priority ?? 3) >= 4).length;
 
   if (loading) {
     return (
@@ -158,6 +199,7 @@ const Sources = () => {
             <h1 className="text-3xl font-bold mb-2">News Sources</h1>
             <p className="text-muted-foreground">
               {activeCount} of {sources.length} sources active
+              {highPriorityCount > 0 && ` · ${highPriorityCount} high priority`}
             </p>
           </div>
           <div className="flex gap-2">
@@ -180,8 +222,10 @@ const Sources = () => {
               url={source.url}
               sourceType={source.source_type || 'news'}
               isActive={source.is_active ?? true}
+              priority={source.priority ?? 3}
               onToggle={handleToggle}
               onDelete={handleDelete}
+              onPriorityChange={handlePriorityChange}
               index={index}
             />
           ))}
