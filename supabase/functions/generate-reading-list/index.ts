@@ -90,6 +90,12 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Update items_count on reading list
+    await supabase
+      .from('reading_lists')
+      .update({ items_count: finalContent.length })
+      .eq('id', readingList.id)
+
     console.log('Reading list generated successfully')
 
     return new Response(

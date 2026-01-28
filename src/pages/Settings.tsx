@@ -18,17 +18,49 @@ import {
   CheckCircle
 } from "lucide-react";
 
+const SETTINGS_STORAGE_KEY = 'healthcare-ai-daily-settings';
+
+interface AppSettings {
+  dailyDigest: boolean;
+  digestTime: string;
+  autoApprove: boolean;
+  articlesPerDay: string;
+}
+
+const defaultSettings: AppSettings = {
+  dailyDigest: true,
+  digestTime: "07:00",
+  autoApprove: false,
+  articlesPerDay: "15",
+};
+
+const loadSettings = (): AppSettings => {
+  try {
+    const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (stored) {
+      return { ...defaultSettings, ...JSON.parse(stored) };
+    }
+  } catch (e) {
+    console.error('Failed to load settings from localStorage:', e);
+  }
+  return defaultSettings;
+};
+
+const saveSettings = (settings: AppSettings): void => {
+  try {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  } catch (e) {
+    console.error('Failed to save settings to localStorage:', e);
+  }
+};
+
 const Settings = () => {
-  const [settings, setSettings] = useState({
-    dailyDigest: true,
-    digestTime: "07:00",
-    autoApprove: false,
-    articlesPerDay: "15",
-  });
+  const [settings, setSettings] = useState<AppSettings>(loadSettings);
   const [runningPipeline, setRunningPipeline] = useState(false);
   const [pipelineStatus, setPipelineStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const handleSave = () => {
+    saveSettings(settings);
     toast({
       title: "Settings saved",
       description: "Your preferences have been updated.",
