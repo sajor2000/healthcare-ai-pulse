@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -21,7 +22,7 @@ import {
 } from "@/components/ui/select";
 
 interface AddSourceDialogProps {
-  onAdd: (source: { name: string; url: string; sourceType: string }) => void;
+  onAdd: (source: { name: string; url: string; sourceType: string; description?: string }) => void;
 }
 
 const AddSourceDialog = ({ onAdd }: AddSourceDialogProps) => {
@@ -29,13 +30,15 @@ const AddSourceDialog = ({ onAdd }: AddSourceDialogProps) => {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [sourceType, setSourceType] = useState("news");
+  const [description, setDescription] = useState("");
 
   const handleSubmit = () => {
     if (name && url) {
-      onAdd({ name, url, sourceType });
+      onAdd({ name, url, sourceType, description: description || undefined });
       setName("");
       setUrl("");
       setSourceType("news");
+      setDescription("");
       setOpen(false);
     }
   };
@@ -48,33 +51,36 @@ const AddSourceDialog = ({ onAdd }: AddSourceDialogProps) => {
           Add Source
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-card border-border">
+      <DialogContent className="sm:max-w-[500px] bg-card border-border">
         <DialogHeader>
           <DialogTitle>Add New Source</DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Add a news source to track for healthcare AI content.
+            Add any website, blog, newsletter, or RSS feed to track healthcare AI content for LinkedIn posts.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">Source Name</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Nature Medicine"
+              placeholder="e.g., Nature Medicine, TechCrunch AI"
               className="bg-secondary border-border"
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="url">URL</Label>
+            <Label htmlFor="url">URL (Website or RSS Feed)</Label>
             <Input
               id="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://..."
+              placeholder="https://example.com or https://example.com/feed.xml"
               className="bg-secondary border-border"
             />
+            <p className="text-xs text-muted-foreground">
+              Enter homepage URL or direct RSS/Atom feed URL for better article discovery
+            </p>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="type">Source Type</Label>
@@ -83,12 +89,28 @@ const AddSourceDialog = ({ onAdd }: AddSourceDialogProps) => {
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="news">News</SelectItem>
-                <SelectItem value="blog">Blog</SelectItem>
-                <SelectItem value="journal">Journal</SelectItem>
-                <SelectItem value="policy">Policy</SelectItem>
+                <SelectItem value="news">📰 News Site</SelectItem>
+                <SelectItem value="blog">✍️ Blog / Newsletter</SelectItem>
+                <SelectItem value="journal">🔬 Research Journal</SelectItem>
+                <SelectItem value="policy">🏛️ Policy / Government</SelectItem>
+                <SelectItem value="company">🏢 Company Blog</SelectItem>
+                <SelectItem value="podcast">🎙️ Podcast / Media</SelectItem>
+                <SelectItem value="social">💬 Social / Community</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="description">Description (Optional)</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Brief description of this source and why it's valuable for LinkedIn content..."
+              className="bg-secondary border-border resize-none h-20"
+            />
+            <p className="text-xs text-muted-foreground">
+              Helps AI understand the source context for better LinkedIn post generation
+            </p>
           </div>
         </div>
         <DialogFooter>

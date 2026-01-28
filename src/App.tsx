@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import LinkedIn from "./pages/LinkedIn";
 import Sources from "./pages/Sources";
+import Saved from "./pages/Saved";
 import Settings from "./pages/Settings";
 import History from "./pages/History";
 import NotFound from "./pages/NotFound";
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/linkedin" element={<LinkedIn />} />
           <Route path="/sources" element={<Sources />} />
+          <Route path="/saved" element={<Saved />} />
           <Route path="/history" element={<History />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
